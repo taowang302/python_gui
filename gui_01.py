@@ -1,40 +1,21 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 import cgi
 import json
-import subprocess
-
-usr_dic = {'tom':"123456"}
-
-def login(information):
-    #print name
-    passwd = usr_dic.get(information.get("name"))
-    if passwd:
-        if passwd == information.get("passwd"):
-            return json.dumps({'status': "login success"})
-        else:
-            return json.dumps({'status': "password error"})
-    else:
-        return json.dumps({'status': "user do not registered"})
+import UserLogin
+from RunShell import RunCommand
 
 
-def run_shell_command(information):
-    #command_list = unicode(information.get("command"),"utf-8").split(" ")
-    #print type(information.get("command"))
-    command_list = information.get("command").encode("utf-8").split(" ")
-    print command_list
-    try:
-        subprocess.Popen(command_list)
-    except Exception as e:
-        #print e
-        return json.dumps({'status': "run fail" , "reason":unicode(e)})
-    else:
-        # print "sucess"
-        return json.dumps({'status': "success"})
 
 
-method_dic = {'login': login,
-              "run_shell_command": run_shell_command}
 
+
+
+def check_login(information):
+    coon = UserLogin.set_mysql(host='localhost', port=3306, database='gui_test', usr='root', passwd=123456)
+    return UserLogin.check_login(coon, information)
+
+method_dic = {'UserLogin': check_login,
+              "run_shell_command": RunCommand.run_shell_command}
 
 class TodoHandler(BaseHTTPRequestHandler):
     """A simple TODO server
