@@ -1,21 +1,41 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
 import cgi
 import json
-import UserLogin
+from   UserLogin.check_login import *
 from RunShell import RunCommand
+from OP_RETURN.OP_RETURN import *
+import sys
 
-
-
-
-
+def btc_opreturn(information):
+    print "start action"
+    send_address = information.get("address").decode("utf-8").rstrip("\n")
+    send_amount = information.get("amount").decode("utf-8").rstrip("\n")
+    metadata =  information.get("metadata").decode("utf-8").rstrip("\n")
+    if_testnet = int(information.get("if_testnet"))
+    if if_testnet:
+        try:
+            result = OP_RETURN_send(send_address, float(send_amount), metadata, if_testnet)
+        except:
+            info = sys.exc_info()
+            print info[0],":",info[1]
+            return json.dumps({"status":"fail","reason":'{}'.format(sys.exc_info()[1])})
+        else:
+            print result
+            if 'error' in result:
+                return json.dumps({"status":"fail","information":result})  
+            else:
+                return json.dumps({"status":"sucess","information":result})  
+    else:
+        pass
 
 
 def check_login(information):
-    coon = UserLogin.set_mysql(host='localhost', port=3306, database='gui_test', usr='root', passwd=123456)
-    return UserLogin.check_login(coon, information)
+    coon = set_mysql(host='localhost', port=3306, database='webdemo', usr='root', passwd='jbi123456')
+    return login(coon, information)
 
-method_dic = {'UserLogin': check_login,
-              "run_shell_command": RunCommand.run_shell_command}
+method_dic = {'login': check_login,
+              "run_shell_command": RunCommand.run_shell_command,
+              "op_return":btc_opreturn}
 
 class TodoHandler(BaseHTTPRequestHandler):
     """A simple TODO server
@@ -63,7 +83,6 @@ class TodoHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
         self.end_headers()
-
         self.wfile.write(self.gen_msg(post_values))
 
 
@@ -76,6 +95,6 @@ class TodoHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     # Start a simple server, and loop forever
     from BaseHTTPServer import HTTPServer
-    server = HTTPServer(('localhost', 8888), TodoHandler)
+    server = HTTPServer(('', 8888), TodoHandler)
     print("Starting server, use <Ctrl-C> to stop")
     server.serve_forever()

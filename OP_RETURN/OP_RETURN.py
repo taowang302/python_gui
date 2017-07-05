@@ -36,16 +36,16 @@ except NameError:
   
 # User-defined quasi-constants
 
-OP_RETURN_BITCOIN_IP='127.0.0.1' # IP address of your bitcoin node
+OP_RETURN_BITCOIN_IP='192.168.10.174' # IP address of your bitcoin node
 OP_RETURN_BITCOIN_USE_CMD=False # use command-line instead of JSON-RPC?
 
 if OP_RETURN_BITCOIN_USE_CMD:
 	OP_RETURN_BITCOIN_PATH='/usr/bin/bitcoin-cli' # path to bitcoin-cli executable on this server
 	
 else:
-	OP_RETURN_BITCOIN_PORT='' # leave empty to use default port for mainnet/testnet
-	OP_RETURN_BITCOIN_USER='' # leave empty to read from ~/.bitcoin/bitcoin.conf (Unix only)
-	OP_RETURN_BITCOIN_PASSWORD='' # leave empty to read from ~/.bitcoin/bitcoin.conf (Unix only)
+	OP_RETURN_BITCOIN_PORT='18332' # leave empty to use default port for mainnet/testnet
+	OP_RETURN_BITCOIN_USER='wangtao' # leave empty to read from ~/.bitcoin/bitcoin.conf (Unix only)
+	OP_RETURN_BITCOIN_PASSWORD='10nss2mm' # leave empty to read from ~/.bitcoin/bitcoin.conf (Unix only)
 	
 OP_RETURN_BTC_FEE=0.0001 # BTC fee to pay per transaction
 OP_RETURN_BTC_DUST=0.00001 # omit BTC outputs smaller than this
@@ -82,14 +82,17 @@ def OP_RETURN_send(send_address, send_amount, metadata, testnet=False):
 	# Calculate amounts and choose inputs
 
 	output_amount=send_amount+OP_RETURN_BTC_FEE
-
+	# change to use input address
 	inputs_spend=OP_RETURN_select_inputs(output_amount, testnet)
-	
+	#inputs_spend = {'inputs': 'n3pmTQV9FqQoTmzEAnkfedXbNqwfmqxbbz','total': 0.001,}
 	if 'error' in inputs_spend:
 		return {'error': inputs_spend['error']}
 	
-	change_amount=inputs_spend['total']-output_amount
-
+	change_amount=round(inputs_spend['total']-output_amount,4)
+	#print ">>>>>>>>>>>>>>>>>>>>>>>>>>>"
+	#print inputs_spend['total']
+	#print output_amount
+	#print "<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 	# Build the raw transaction
 		
 	change_address=OP_RETURN_bitcoin_cmd('getrawchangeaddress', testnet)
@@ -321,7 +324,7 @@ def OP_RETURN_select_inputs(total_amount, testnet):
 		return {'error': 'Not enough funds are available to cover the amount and fee'}
 		
 	# Return the successful result
-
+	
 	return {
 		'inputs': inputs_spend,
 		'total': input_amount,
@@ -329,6 +332,7 @@ def OP_RETURN_select_inputs(total_amount, testnet):
 
 
 def OP_RETURN_create_txn(inputs, outputs, metadata, metadata_pos, testnet):
+	#print "inputs => {}\n outputs => {}".format(inputs,outputs)
 	raw_txn=OP_RETURN_bitcoin_cmd('createrawtransaction', testnet, inputs, outputs)
 	
 	txn_unpacked=OP_RETURN_unpack_txn(OP_RETURN_hex_to_bin(raw_txn))
@@ -471,9 +475,14 @@ def OP_RETURN_bitcoin_cmd(command, testnet, *args): # more params are read from 
 		auth_handler=HTTPBasicAuthHandler(passman)
 		opener=build_opener(auth_handler)
 		install_opener(opener)
+		#print "+++++++++++++++++++++++++++++++++++++++++++"
+		#print "url => {}\nrequest => {}\nOP_RETURN_NET_TIMEOUT=>{}".format(url,request,OP_RETURN_NET_TIMEOUT)
 		raw_result=urlopen(url, json.dumps(request).encode('utf-8'), OP_RETURN_NET_TIMEOUT).read()
 		
 		result_array=json.loads(raw_result.decode('utf-8'))
+		#print "========================"
+		#print result_array
+		#print "\n"
 		result=result_array['result']
 
 	return result
