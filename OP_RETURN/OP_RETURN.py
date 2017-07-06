@@ -416,6 +416,7 @@ def OP_RETURN_bitcoin_check(testnet):
 
 
 def OP_RETURN_bitcoin_cmd(command, testnet, *args): # more params are read from here
+	print args
 	if OP_RETURN_BITCOIN_USE_CMD:
 		sub_args=[OP_RETURN_BITCOIN_PATH]
 		if testnet:
@@ -439,7 +440,7 @@ def OP_RETURN_bitcoin_cmd(command, testnet, *args): # more params are read from 
 			'method': command,
 			'params': args,
 		}
-		
+		print json.dumps(request).encode('utf-8')	
 		port=OP_RETURN_BITCOIN_PORT
 		user=OP_RETURN_BITCOIN_USER
 		password=OP_RETURN_BITCOIN_PASSWORD

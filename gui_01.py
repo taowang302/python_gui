@@ -5,6 +5,7 @@ from   UserLogin.check_login import *
 from RunShell import RunCommand
 from OP_RETURN.OP_RETURN import *
 import sys
+from FactomTool import factomtool
 
 def btc_opreturn(information):
     print "start action"
@@ -28,6 +29,11 @@ def btc_opreturn(information):
     else:
         pass
 
+def factom_action(information):
+    factomd_conn = factomtool.FactomConnect(host="192.168.10.172", port=8088) 
+    result = factomd_conn.factom_cmd(information.get("command"),information.get("data"))
+    #print result
+    return result
 
 def check_login(information):
     coon = set_mysql(host='localhost', port=3306, database='webdemo', usr='root', passwd='jbi123456')
@@ -35,7 +41,8 @@ def check_login(information):
 
 method_dic = {'login': check_login,
               "run_shell_command": RunCommand.run_shell_command,
-              "op_return":btc_opreturn}
+              "op_return":btc_opreturn,
+              "factom_action":factom_action}
 
 class TodoHandler(BaseHTTPRequestHandler):
     """A simple TODO server
